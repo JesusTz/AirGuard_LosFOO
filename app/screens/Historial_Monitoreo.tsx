@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { readAllEnvironmentalData, EnvironmentalData } from "../database/database";
+import { readAllEnvironmentalData, EnvironmentalData } from "../database/databaseSQLite";
 import styles from "../styles/style_Historial_Monitoreo";
 
 export default function Historial_Monitoreo() {

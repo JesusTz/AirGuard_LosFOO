@@ -1,6 +1,6 @@
 // database.ts
 import * as SQLite from "expo-sqlite";
-import { testEnvironmentalData, generateDynamicTestData } from "./testData";
+import { generateDynamicTestData } from "./testDataSQLite";
 
 const DB_NAME = "airQualityDatabase";
 
@@ -78,15 +78,12 @@ export async function readAllEnvironmentalData(): Promise<EnvironmentalData[]> {
 // Función para agregar datos de prueba
 export async function insertTestData(): Promise<void> {
   const db = await getDatabase();
-
-  // Inserta los datos de prueba estáticos
-  for (const data of testEnvironmentalData) {
-    await createEnvironmentalData(data);
-  }
-
+  
   // Inserta un dato dinámico (opcional)
   const dynamicData = generateDynamicTestData();
-  await createEnvironmentalData(dynamicData);
+  for (const data of dynamicData) {
+    await createEnvironmentalData(data);
+  }
 }
 
 // Función para eliminar todos los datos (útil para pruebas)

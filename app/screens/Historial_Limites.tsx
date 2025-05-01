@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, StyleSheet, Alert, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { readAllThresholds, deleteThresholdById, Threshold } from "../database/database";
+import { readAllThresholds, deleteThresholdById, Threshold } from "../database/databaseSQLite";
 import styles from "../styles/style_Historial_limites";
 
 export default function ThresholdHistorial_Monitoreo() {

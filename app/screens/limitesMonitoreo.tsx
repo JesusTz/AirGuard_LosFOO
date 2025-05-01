@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, Image, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { createThreshold } from "../database/database";
+import { createThreshold } from "../database/databaseSQLite";
 import styles from "../styles/style_Limites_Monitoreo";
 
 export default function ThresholdSettingsScreen() {
