@@ -1,46 +1,46 @@
 import { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, Image, ScrollView } from "react-native";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { createEnvironmentalData } from "../database/databaseSQLite";
 import styles from "../styles/style_createDatos";
+import { db } from "../database/Firebase";
+import { addDoc, collection } from "firebase/firestore";
 
-export default function ManualDataEntryScreen() {
-  const [formData, setFormData] = useState({
-    temperature: "",
-    humidity: "",
-    dust: "",
-    pressure: ""
-  });
-  const router = useRouter();
+const ManualDataEntryScreen = () => {
+  const [temperature, setTemperature] = useState("");
+  const [humidity, setHumidity] = useState("");
+  const [dust, setDust] = useState("");
+  const [pressure, setPressure] = useState("");
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveData = async () => {
-    if (!Object.values(formData).every(Boolean)) {
-      Alert.alert("Campos incompletos", "Por favor, completa todos los campos.");
+  const GuardarDatos = async () => {
+    if (!temperature || !humidity || !dust || !pressure) {
+      Alert.alert("Error", "Por favor completa todos los campos.");
       return;
     }
 
+    const fechaActual = new Date();
     try {
-      await createEnvironmentalData({
-        temperature: parseFloat(formData.temperature),
-        humidity: parseFloat(formData.humidity),
-        dust: parseFloat(formData.dust),
-        pressure: parseFloat(formData.pressure),
-        timestamp: new Date().toISOString(),
+      await addDoc(collection(db, "Datos_ambientales"), {
+        temperature: temperature,
+        humidity: humidity,
+        dust: dust,
+        pressure:pressure,
+        date: fechaActual ,
       });
-      
-      Alert.alert("Éxito", "Datos guardados correctamente", [
-        { text: "OK", onPress: () => router.push("/screens/dashboard") }
-      ]);
+
+      Alert.alert("Éxito", "Datos guardados correctamente.");
+      setTemperature("");
+      setHumidity("");
+      setDust("");
+      setPressure("");
+      router.push("/screens/dashboard");
     } catch (error) {
       Alert.alert("Error", "No se pudieron guardar los datos.");
       console.error(error);
     }
-  };
+  }
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -63,8 +63,8 @@ export default function ManualDataEntryScreen() {
             placeholder="Temperatura (°C)"
             placeholderTextColor="#94a3b8"
             keyboardType="numeric"
-            value={formData.temperature}
-            onChangeText={(text) => handleInputChange('temperature', text)}
+            value={temperature}
+            onChangeText={setTemperature}
           />
         </View>
 
@@ -75,8 +75,8 @@ export default function ManualDataEntryScreen() {
             placeholder="Humedad (%)"
             placeholderTextColor="#94a3b8"
             keyboardType="numeric"
-            value={formData.humidity}
-            onChangeText={(text) => handleInputChange('humidity', text)}
+            value={humidity}
+            onChangeText={setHumidity}
           />
         </View>
 
@@ -87,8 +87,8 @@ export default function ManualDataEntryScreen() {
             placeholder="Polvo (µg/m³)"
             placeholderTextColor="#94a3b8"
             keyboardType="numeric"
-            value={formData.dust}
-            onChangeText={(text) => handleInputChange('dust', text)}
+            value={dust}
+            onChangeText={setDust}
           />
         </View>
 
@@ -99,8 +99,8 @@ export default function ManualDataEntryScreen() {
             placeholder="Presión (hPa)"
             placeholderTextColor="#94a3b8"
             keyboardType="numeric"
-            value={formData.pressure}
-            onChangeText={(text) => handleInputChange('pressure', text)}
+            value={pressure}
+            onChangeText={setPressure}
           />
         </View>
       </View>
@@ -109,7 +109,7 @@ export default function ManualDataEntryScreen() {
       <View style={styles.buttonGroup}>
         <Pressable 
           style={[styles.button, styles.saveButton]} 
-          onPress={handleSaveData}
+          onPress={GuardarDatos}
         >
           <MaterialIcons name="save" size={24} color="#fff" />
           <Text style={styles.buttonText}>Guardar Datos</Text>
@@ -126,3 +126,6 @@ export default function ManualDataEntryScreen() {
     </ScrollView>
   );
 }
+
+
+export default ManualDataEntryScreen;

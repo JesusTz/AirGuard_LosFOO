@@ -2,10 +2,12 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, Image, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { createThreshold } from "../database/databaseSQLite";
+import { addDoc, collection } from "firebase/firestore"; // Importa Firestore
+import { db } from "../database/Firebase"; // Importa la referencia a Firebase
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Importa AsyncStorage
 import styles from "../styles/style_Limites_Monitoreo";
 
-export default function ThresholdSettingsScreen() {
+export default function CrearLimitesMonitoreo() {
   const [formData, setFormData] = useState({
     temperature: "",
     humidity: "",
@@ -35,9 +37,14 @@ export default function ThresholdSettingsScreen() {
     };
 
     try {
-      await createThreshold(thresholds);
+      // Guarda los límites en Firestore
+      await addDoc(collection(db, "Limites_Monitoreo"), thresholds);
+
+      // Guarda los límites en AsyncStorage
+      await AsyncStorage.setItem("thresholds", JSON.stringify(thresholds));
+
       Alert.alert("Éxito", "Límites guardados correctamente", [
-        { text: "OK", onPress: () => router.push("/screens/dashboard") }
+        { text: "OK", onPress: () => router.push("/screens/dashboard") },
       ]);
     } catch (error) {
       Alert.alert("Error", "No se pudieron guardar los límites.");

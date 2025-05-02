@@ -3,18 +3,42 @@ import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { readAllEnvironmentalData, EnvironmentalData } from "../database/databaseSQLite";
 import styles from "../styles/style_Historial_Monitoreo";
+import { db } from "../database/Firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function Historial_Monitoreo() {
-  const [data, setData] = useState<EnvironmentalData[]>([]);
 
-  const loadEnvironmentalData = async () => {
-    const environmentalData = await readAllEnvironmentalData();
-    setData(environmentalData.reverse()); // Mostrar los más recientes primero
-  };
+  interface dtos{
+    id: string; // ID del documento
+    temperature: number; // Temperatura en grados Celsius
+    humidity: number; // Humedad en porcentaje
+    dust: number; // Concentración de polvo en µg/m³
+    pressure: number; // Presión atmosférica en hPa
+    date: Date; // Fecha y hora del registro
+  }
+  const [datos, setDatos] = useState<dtos[]>([]);
 
   useEffect(() => {
-    loadEnvironmentalData();
+    obtenerDatos();
   }, []);
+
+  const obtenerDatos = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "Datos_ambientales"));
+      const datosAmbientales: dtos[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        temperature: doc.data().temperature,
+        humidity: doc.data().humidity,
+        dust: doc.data().dust,
+        pressure: doc.data().pressure,
+        date: doc.data().date.toDate(),
+      }));
+      setDatos(datosAmbientales.reverse()); // Invertir el orden para mostrar los más recientes primero
+    } catch (error) {
+      console.error("Error al obtener Datos Ambientales:", error);
+    }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -30,13 +54,13 @@ export default function Historial_Monitoreo() {
 
       {/* Contenido */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {data.length > 0 ? (
-          data.map((item, index) => (
+        {datos.length > 0 ? (
+          datos.map((item, index) => (
             <View key={index} style={styles.dataCard}>
               <View style={styles.cardHeader}>
                 <MaterialIcons name="calendar-today" size={20} color="#64748b" />
                 <Text style={styles.timestamp}>
-                  {new Date(item.timestamp).toLocaleString()}
+                {item.date.toLocaleString()}
                 </Text>
               </View>
 

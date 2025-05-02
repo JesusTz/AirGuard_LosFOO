@@ -1,6 +1,6 @@
 // database.ts
 import * as SQLite from "expo-sqlite";
-import { generateDynamicTestData } from "./testDataSQLite";
+import { generateDynamicTestData } from "./testData";
 
 const DB_NAME = "airQualityDatabase";
 

@@ -1,37 +1,47 @@
 import { useState, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet, Alert, Image } from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, Pressable, ScrollView, Alert, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { readAllThresholds, deleteThresholdById, Threshold } from "../database/databaseSQLite";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore"; // Importa Firestore
+import { db } from "../database/Firebase"; // Importa la referencia a Firebase
 import styles from "../styles/style_Historial_limites";
 
-export default function ThresholdHistorial_Monitoreo() {
-  const [thresholds, setThresholds] = useState<Threshold[]>([]);
-  const router = useRouter();
+export default function Historial_Limites() {
+  const [thresholds, setThresholds] = useState<{ id: string; description?: string; timestamp?: string; temperature?: number; humidity?: number; dust?: number; pressure?: number }[]>([]);
 
+  // Cargar los datos desde Firestore
   const loadThresholds = async () => {
-    const data = await readAllThresholds();
-    setThresholds(data.reverse()); // Mostrar los más recientes primero
+    try {
+      const querySnapshot = await getDocs(collection(db, "Limites_Monitoreo"));
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id, // Incluye el ID del documento
+        ...doc.data(),
+      }));
+      setThresholds(data.reverse()); // Mostrar los más recientes primero
+    } catch (error) {
+      console.error("Error al cargar los límites:", error);
+    }
   };
 
-  const handleDeleteThreshold = async (id: number) => {
+  // Eliminar un límite de Firestore
+  const handleDeleteThreshold = async (id: string) => {
     Alert.alert(
       "Confirmar eliminación",
-      "¿Estás seguro de que deseas eliminar este conjunto de límites?",
+      "¿Estás seguro de que deseas eliminar este límite?",
       [
         { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Eliminar", 
+        {
+          text: "Eliminar",
           onPress: async () => {
             try {
-              await deleteThresholdById(id);
-              Alert.alert("Éxito", "Límites eliminados correctamente");
-              loadThresholds();
+              await deleteDoc(doc(db, "Limites_Monitoreo", id)); // Elimina el documento en Firestore
+              Alert.alert("Éxito", "Límite eliminado correctamente");
+              loadThresholds(); // Recargar los datos
             } catch (error) {
-              Alert.alert("Error", "No se pudo eliminar los límites");
+              Alert.alert("Error", "No se pudo eliminar el límite");
+              console.error(error);
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -44,8 +54,8 @@ export default function ThresholdHistorial_Monitoreo() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Image 
-          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3132/3132735.png' }}
+        <Image
+          source={{ uri: "https://cdn-icons-png.flaticon.com/512/3132/3132735.png" }}
           style={styles.logo}
         />
         <Text style={styles.title}>Historial de Límites</Text>
@@ -60,10 +70,10 @@ export default function ThresholdHistorial_Monitoreo() {
               <View style={styles.cardHeader}>
                 <MaterialIcons name="settings" size={20} color="#64748b" />
                 <Text style={styles.cardTitle}>
-                  {threshold.description || "Límites sin descripción"}
+                  {threshold.description || "Límite sin descripción"}
                 </Text>
                 <Text style={styles.cardDate}>
-                  {new Date(threshold.timestamp).toLocaleDateString()}
+                  {threshold.timestamp ? new Date(threshold.timestamp).toLocaleDateString() : "Fecha no disponible"}
                 </Text>
               </View>
 
@@ -89,9 +99,9 @@ export default function ThresholdHistorial_Monitoreo() {
                 </View>
               </View>
 
-              <Pressable 
-                style={styles.deleteButton} 
-                onPress={() => handleDeleteThreshold(threshold.id!)}
+              <Pressable
+                style={styles.deleteButton}
+                onPress={() => handleDeleteThreshold(threshold.id)} // Pasa el ID del documento
               >
                 <MaterialIcons name="delete" size={20} color="#fff" />
                 <Text style={styles.deleteButtonText}>Eliminar</Text>
@@ -105,14 +115,6 @@ export default function ThresholdHistorial_Monitoreo() {
           </View>
         )}
       </ScrollView>
-
-      {/* Botón flotante para regresar */}
-      <Pressable 
-        style={styles.backButton} 
-        onPress={() => router.push("/screens/dashboard")}
-      >
-        <MaterialIcons name="arrow-back" size={24} color="#fff" />
-      </Pressable>
     </View>
   );
 }
